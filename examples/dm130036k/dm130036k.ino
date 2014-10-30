@@ -22,7 +22,8 @@ void loop() {
   nodeID = asciiToHex(nodeID);
   //checkNodeId   <= future function
   Serial.println(nodeID, DEC);
-  Serial.print("Please select function: [0] white [1] black [2] input number [3] input number with decimal point:");
+  Serial.println("Please select function: [0] white [1] black [2] input number [3] input number with decimal point");
+  Serial.print("[4] input number (white type):");
   while(Serial.available() == 0){} // wait input
   funcSelec = Serial.read();
   funcSelec = asciiToHex(funcSelec);
@@ -38,16 +39,23 @@ void loop() {
       epd.allBlack(nodeID);
       break;
     case 2:
-      seg[21] = 0;
+//      seg[21] = 0;
       inputNum(nodeID);
       break;
     case 3:  
       seg[21] = 1;
       inputNumPoint(nodeID);
       break;
+    case 4:
+//      seg[21] = 0;
+      inputNumWhite(nodeID);
+      break;
   }
   for (i=0;i<5;i++) {
     displayData[i] = 0;
+  }
+  for (i=0;i<36;i++) {
+    seg[i]=0;
   }
 }
 
@@ -96,7 +104,34 @@ void inputNumPoint(byte _nodeID) {
   //Serial.println("Phase 2");  
   phaseTwo(_nodeID);
   //Serial.println("Phase 3");
-  phaseThree_1(_nodeID);
+  phaseThreePoint(_nodeID);
+  epd.powerSaving(_nodeID);
+//  for (i=0;i<5;i++) {
+//    displayData[i] = 0;
+//  }
+}
+
+void inputNumWhite(byte _nodeID) {
+  int temp[5] = {-1,-1,-1,-1,-1};
+  Serial.print("Please input display number:");
+  while(Serial.available() == 0){} // wait input
+  readSerialData(temp, 5);
+  resort(temp, 5);
+  for (j=0;j<5;j++) {
+    Serial.print(temp[j]);
+  }
+  Serial.println();
+  numericToRegister(temp, 5);
+  //Serial.println("Begin");
+  //Serial.println("Initialize");
+  initialize(_nodeID);
+  //Serial.println("Phase 1");
+  phaseOne(_nodeID);
+  //Serial.println("Phase 2");  
+  phaseTwo(_nodeID);
+  phaseOneWhite(_nodeID);
+  //Serial.println("Phase 3");
+  phaseThreeWhite(_nodeID);
   epd.powerSaving(_nodeID);
 //  for (i=0;i<5;i++) {
 //    displayData[i] = 0;
@@ -153,6 +188,17 @@ void phaseOne(byte _nodeID) {
   delay(100);
 }
 
+void phaseOneWhite(byte _nodeID) {
+  for (j=0;j<4;j++) {
+    epd.writeRegister(_nodeID, j, 0xFF);
+  }
+  epd.writeRegister(_nodeID, 4, 0x3F);
+  
+  epd.writeRegister(_nodeID, 5, 0x88);
+  epd.writeRegister(_nodeID, 5, 0x80);
+  delay(100);
+}
+
 void phaseTwo(byte _nodeID) {
   for (j=0;j<4;j++) {
     epd.writeRegister(_nodeID, j, 0x00);
@@ -173,8 +219,18 @@ void phaseThree(byte _nodeID) {
   delay(80);
 }
 
-void phaseThree_1(byte _nodeID) {
+void phaseThreePoint(byte _nodeID) {
   for (j=0;j<5;j++) {
+    epd.writeRegister(_nodeID, j, displayData[j]);
+  }
+  epd.writeRegister(_nodeID, 5, 0x88);
+  epd.writeRegister(_nodeID, 5, 0x80);
+  delay(80);
+}
+
+void phaseThreeWhite(byte _nodeID) {
+  for (j=0;j<5;j++) {
+    displayData[j] = ~displayData[j];
     epd.writeRegister(_nodeID, j, displayData[j]);
   }
   epd.writeRegister(_nodeID, 5, 0x88);
