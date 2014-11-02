@@ -2,16 +2,18 @@
 
 //const int data = 8;
 //const int clock = 9;
-EPD epd(0,9,8);
+EPD epd(1,9,8);
+byte displayData[12] = {0};
 unsigned int driverModel;
-byte displayData[5] = {0,0,0,0,0};
-int seg[36] = {0};
+int arraySize;
+int seg[120] = {0};
 int i;
 int j;
 
 void setup(){
   Serial.begin(57600);
-/*  Serial.print("Driver model: [0]DM130036 [1]DM130120:");
+  arraySize=sizeof(displayData);
+  /*Serial.print("Driver model: [0]DM130036 [1]DM130120:");
   while(Serial.available()==0){};
   do {
     driverModel=Serial.read();
@@ -38,17 +40,12 @@ void loop() {
   Serial.println(funcSelec);
   switch (funcSelec){
     case 0:
-      //epd.allBlack(driverModel, nodeID);
       epd.allBlack(nodeID);
-      //epd.allWhite(driverModel, nodeID);
       epd.allWhite(nodeID);
       break;
     case 1:
-      //epd.allBlack(driverModel, nodeID);
       epd.allBlack(nodeID);
-      //epd.allWhite(driverModel, nodeID);
       epd.allWhite(nodeID);
-      //epd.allBlack(driverModel, nodeID);
       epd.allBlack(nodeID);
       break;
     case 2:
@@ -57,6 +54,11 @@ void loop() {
       break;
     case 3:  
       seg[21] = 1;
+      seg[43] = 1;
+      seg[58] = 1;
+      seg[66] = 1;
+      seg[74] = 1;
+      seg[82] = 1;
       inputNumPoint(nodeID);
       break;
     case 4:
@@ -64,25 +66,30 @@ void loop() {
       inputNumWhite(nodeID);
       break;
   }
-  for (i=0;i<5;i++) {
+  for (i=0;i<12;i++) {
     displayData[i] = 0;
   }
-  for (i=0;i<36;i++) {
+  for (i=0;i<120;i++) {
     seg[i]=0;
   }
 }
 
+void variableArray(int _arraySize) {
+//  byte temp[_arraySize] = {-1};
+}
+
 void inputNum(byte _nodeID) {
-  int temp[5] = {-1,-1,-1,-1,-1};
+  int temp[] = {-1};
+//  variableArray(arraySize);
   Serial.print("Please input display number:");
   while(Serial.available() == 0){} // wait input
-  readSerialData(temp, 5);
-  resort(temp, 5);
-  for (j=0;j<5;j++) {
+  readSerialData(temp, arraySize);
+  resort(temp, arraySize);
+  for (j=0;j<arraySize;j++) {
     Serial.print(temp[j]);
   }
   Serial.println();
-  numericToRegister(temp, 5);
+  numericToRegister(temp, arraySize);
   //Serial.println("Begin");
   //Serial.println("Initialize");
   initialize(_nodeID);
@@ -92,24 +99,23 @@ void inputNum(byte _nodeID) {
   phaseTwo(_nodeID);
   //Serial.println("Phase 3");
   phaseThree(_nodeID);
-  //epd.powerSaving(driverModel, _nodeID);
-    epd.powerSaving(_nodeID);
+  epd.powerSaving(_nodeID);
 //  for (i=0;i<5;i++) {
 //    displayData[i] = 0;
 //  }
 }
 
 void inputNumPoint(byte _nodeID) {
-  int temp[5] = {-1,-1,-1,-1,-1};
+  int temp[12] = {-1};
   Serial.print("Please input display number:");
   while(Serial.available() == 0){} // wait input
-  readSerialData(temp, 5);
-  resort(temp, 5);
-  for (j=0;j<5;j++) {
+  readSerialData(temp, arraySize);
+  resort(temp, arraySize);
+  for (j=0;j<arraySize;j++) {
     Serial.print(temp[j]);
   }
   Serial.println();
-  numericToRegister(temp, 5);
+  numericToRegister(temp, arraySize);
   //Serial.println("Begin");
   //Serial.println("Initialize");
   initialize(_nodeID);
@@ -119,7 +125,6 @@ void inputNumPoint(byte _nodeID) {
   phaseTwo(_nodeID);
   //Serial.println("Phase 3");
   phaseThreePoint(_nodeID);
-  //epd.powerSaving(driverModel, _nodeID);
   epd.powerSaving(_nodeID);
 //  for (i=0;i<5;i++) {
 //    displayData[i] = 0;
@@ -127,16 +132,16 @@ void inputNumPoint(byte _nodeID) {
 }
 
 void inputNumWhite(byte _nodeID) {
-  int temp[5] = {-1,-1,-1,-1,-1};
+  int temp[] = {-1};
   Serial.print("Please input display number:");
   while(Serial.available() == 0){} // wait input
-  readSerialData(temp, 5);
-  resort(temp, 5);
-  for (j=0;j<5;j++) {
+  readSerialData(temp, arraySize);
+  resort(temp, arraySize);
+  for (j=0;j<arraySize;j++) {
     Serial.print(temp[j]);
   }
   Serial.println();
-  numericToRegister(temp, 5);
+  numericToRegister(temp, arraySize);
   //Serial.println("Begin");
   //Serial.println("Initialize");
   initialize(_nodeID);
@@ -147,7 +152,6 @@ void inputNumWhite(byte _nodeID) {
   phaseOneWhite(_nodeID);
   //Serial.println("Phase 3");
   phaseThreeWhite(_nodeID);
-  //epd.powerSaving(driverModel, _nodeID);
   epd.powerSaving(_nodeID);
 //  for (i=0;i<5;i++) {
 //    displayData[i] = 0;
@@ -165,101 +169,101 @@ int asciiToHex(int _target) {
   return (_target);
 }
 
-int readSerialData(int target[], int arraySize) {
-   for (i=0; i<arraySize; i++) {
-     target[i]=Serial.read();
-     target[i]=asciiToHex(target[i]);
+int readSerialData(int _target[], int _arraySize) {
+   for (i=0; i<_arraySize; i++) {
+     _target[i]=Serial.read();
+     _target[i]=asciiToHex(_target[i]);
      delay(1);
    }
 }
 
-int resort(int target[], int arraySize) {
-  for (i=0;i<arraySize;i++) {
-    if (target[i]==-1) {
+int resort(int _target[], int _arraySize) {
+  for (i=0;i<_arraySize;i++) {
+    if (_target[i]==-1) {
       for (j=i;j>=1;j--) {
-        target[j]=target[j-1];
+        _target[j]=_target[j-1];
       }
-      target[0]=0;
+      _target[0]=0;
     }
   }
 }
 
 void initialize(byte _nodeID) {
-  for (j=0;j<5;j++) {
+  for (j=0;j<17;j++) {
     epd.writeRegister(_nodeID, j, 0);
   }
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(100);
 }
 
 void phaseOne(byte _nodeID) {
-  for (j=0;j<4;j++) {
+  for (j=0;j<16;j++) {
     epd.writeRegister(_nodeID, j, 0xFF);
   }
-  epd.writeRegister(_nodeID, 4, 0x3F);
+  epd.writeRegister(_nodeID, 0x0F, 0x02);
   
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x1F, 0x88);
+  epd.writeRegister(_nodeID, 0x1F, 0x80);
   delay(100);
 }
 
 void phaseOneWhite(byte _nodeID) {
-  for (j=0;j<4;j++) {
+  for (j=0;j<15;j++) {
     epd.writeRegister(_nodeID, j, 0xFF);
   }
-  epd.writeRegister(_nodeID, 4, 0x3F);
+  epd.writeRegister(_nodeID, 0x0F, 0x02);
   
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(100);
 }
 
 void phaseTwo(byte _nodeID) {
-  for (j=0;j<4;j++) {
+  for (j=0;j<15;j++) {
     epd.writeRegister(_nodeID, j, 0x00);
   }
-  epd.writeRegister(_nodeID, 4, 0xC0);
+  epd.writeRegister(_nodeID, 0x0F, 0x01);
 
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(100);
 }
 
 void phaseThree(byte _nodeID) {
-  for (j=0;j<5;j++) {
+  for (j=0;j<16;j++) {
     epd.writeRegister(_nodeID, j, displayData[j]);
   }
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(80);
 }
 
 void phaseThreePoint(byte _nodeID) {
-  for (j=0;j<5;j++) {
+  for (j=0;j<16;j++) {
     epd.writeRegister(_nodeID, j, displayData[j]);
   }
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(80);
 }
 
 void phaseThreeWhite(byte _nodeID) {
-  for (j=0;j<5;j++) {
+  for (j=0;j<16;j++) {
     displayData[j] = ~displayData[j];
     epd.writeRegister(_nodeID, j, displayData[j]);
   }
-  epd.writeRegister(_nodeID, 5, 0x88);
-  epd.writeRegister(_nodeID, 5, 0x80);
+  epd.writeRegister(_nodeID, 0x10, 0x88);
+  epd.writeRegister(_nodeID, 0x10, 0x80);
   delay(80);
 }
 
-void numericToRegister(int _target[], int arraySize) {
-  int _temp[7] = {false};
+void numericToRegister(int _target[], int _arraySize) {
+  int _temp[7] = {0};
   int k;
   int a;
   int b;
-  for (j=0;j<arraySize;j++) {
+  for (j=0;j<_arraySize;j++) {
     switch (_target[j]) {
       case 0:
         _temp[0]=1;
@@ -357,11 +361,26 @@ void numericToRegister(int _target[], int arraySize) {
       if (j>2) {
         a=a+1;
       }
+      if (j>5) {
+        a=a+1;
+      } 
+      if (j>7) {
+        a=a+1;
+      }
+      if (j>8) {
+        a=a+1;
+      }
+      if (j>9) {
+        a=a+1;
+      }
+      if (j>10) {
+        a=a+1;
+      }
       seg[a]=_temp[k];
 //      Serial.println(seg[a]);
     }
   }
-   for (k=0;k<36;k++) {
+   for (k=0;k<120;k++) {
 //     Serial.print("k=");
 //     Serial.println(k);
 //     Serial.print("seg[");
