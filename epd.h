@@ -21,10 +21,13 @@
 
 class EPD {
 	public:
-		EPD(int clockPin, int dataPin);
+		EPD(int model, int clockPin, int dataPin);
 		void writeRegister(byte _nodeID, byte _address, byte _data);
+		//void allWhite(unsigned int _model, byte _nodeID);
 		void allWhite(byte _nodeID);
+		//void allBlack(unsigned int _model, byte _nodeID);
 		void allBlack(byte _nodeID);
+		//void powerSaving(unsigned int _model, byte _nodeID);
 		void powerSaving(byte _nodeID);
 	private:
 		int _dataPin;
